@@ -1,0 +1,102 @@
+<!-- self_check -->
+<launch>
+      <node pkg="sensor_self_check" type="sensor_checker" respawn="true"
+            name="sensor_checker" output="screen" ns="/self_check">
+          <param name="check_topic_number" type="int" value="16" />
+         <!-- canbus -->
+          <param name="canbus_topic_number" type="int" value="4" />
+          <param name="canbus_topic_name1" type="string" value="/xp/auto_state" />
+          <param name="canbus_topic_hz1" type="int" value="50" />
+          <param name="canbus_topic_name2" type="string" value="/xp/auto_state_ex" />
+          <param name="canbus_topic_hz2" type="int" value="50" />
+          <param name="canbus_topic_name3" type="string" value="/xp/eps_status" />
+          <param name="canbus_topic_hz3" type="int" value="20" />
+          <param name="canbus_topic_name4" type="string" value="/xp/esc_status" />     
+          <param name="canbus_topic_hz4" type="int" value="20" />     
+          
+         <!-- gnss -->
+          <param name="gnss_topic_number" type="int" value="8" />
+          <param name="gnss_topic_name1" type="string" value="/ox_gps/fix" />
+          <param name="gnss_topic_hz1" type="int" value="100" />
+          <param name="gnss_topic_name2" type="string" value="/ox_gps/gga" />
+          <param name="gnss_topic_hz2" type="int" value="100" />
+          <param name="gnss_topic_name3" type="string" value="/ox_gps/nav_status" />
+          <param name="gnss_topic_hz3" type="int" value="100" />
+          <param name="gnss_topic_name4" type="string" value="/ox_gps/odom" />
+          <param name="gnss_topic_hz4" type="int" value="100" />
+          <param name="gnss_topic_name5" type="string" value="/ox_gps/pos_type" />
+          <param name="gnss_topic_hz5" type="int" value="100" />
+          <param name="gnss_topic_name6" type="string" value="/ox_gps/time_ref" />
+          <param name="gnss_topic_hz6" type="int" value="10" />
+          <param name="gnss_topic_name7" type="string" value="/ox_gps/vel" />
+          <param name="gnss_topic_hz7" type="int" value="100" />
+          <param name="gnss_topic_name8" type="string" value="/ox_imu/data" />
+          <param name="gnss_topic_hz8" type="int" value="100" />
+
+         <!-- lidar -->
+          <param name="lidar_topic_number" type="int" value="3" />
+          <param name="lidar_topic_name1" type="string" value="/middle/rslidar_packets" />
+          <param name="lidar_topic_hz1" type="int" value="10" />
+          <param name="lidar_topic_name2" type="string" value="/middle/rslidar_packets_difop" />
+          <param name="lidar_topic_hz2" type="int" value="10" />
+          <param name="lidar_topic_name3" type="string" value="/middle/rslidar_points" />
+          <param name="lidar_topic_hz3" type="int" value="10" />
+
+          <!-- camera -->
+          <param name="camera_topic_number" type="int" value="4" />
+          <param name="camera_topic_name1" type="string" value="/left_usb_cam/image_raw" />
+          <param name="camera_topic_hz1" type="int" value="10" />
+          <param name="camera_topic_name2" type="string" value="/left_usb_cam/image_raw/compressed" />
+          <param name="camera_topic_hz2" type="int" value="10" />
+          <param name="camera_topic_name3" type="string" value="/right_usb_cam/image_raw" />
+          <param name="camera_topic_hz3" type="int" value="10" />
+          <param name="camera_topic_name4" type="string" value="/right_usb_cam/image_raw/compressed" />
+          <param name="camera_topic_hz4" type="int" value="10" />
+
+          <!-- localization -->
+          <param name="localization_topic_number" type="int" value="7" />
+          <param name="localization_topic_name1" type="string" value="/localization/gps/fix" />
+          <param name="localization_topic_hz1" type="int" value="100" />
+          <param name="localization_topic_name2" type="string" value="/localization/gps/nav_status" />
+          <param name="localization_topic_hz2" type="int" value="100" />
+          <param name="localization_topic_name3" type="string" value="/localization/gps/odom" />
+          <param name="localization_topic_hz3" type="int" value="100" />
+          <param name="localization_topic_name4" type="string" value="/localization/gps/pos_type" />
+          <param name="localization_topic_hz4" type="int" value="100" />
+          <param name="localization_topic_name5" type="string" value="/localization/gps/time_ref" />
+          <param name="localization_topic_hz5" type="int" value="10" />
+          <param name="localization_topic_name6" type="string" value="/localization/gps/vel" />
+          <param name="localization_topic_hz6" type="int" value="100" />
+          <param name="localization_topic_name7" type="string" value="/localization/imu/data" />
+          <param name="localization_topic_hz7" type="int" value="100" />
+
+          <!-- perception -->
+          <param name="perception_topic_number" type="int" value="2" />
+          <param name="perception_topic_name1" type="string" value="/detection/lidar_detector/objects" />
+          <param name="perception_topic_hz1" type="int" value="10" />
+          <param name="perception_topic_name2" type="string" value="/detection/object_tracker/objects" />
+          <param name="perception_topic_hz2" type="int" value="10" />
+
+          <!-- control -->
+          <param name="control_topic_number" type="int" value="1" />
+          <param name="control_topic_name1" type="string" value="/xp/auto_control" />
+          <param name="control_topic_hz1" type="int" value="20" />
+
+          <!-- planning -->
+          <param name="planning_topic_number" type="int" value="7" />
+          <param name="planning_topic_name1" type="string" value="/zzz/planning/all_trajectory_path" />
+          <param name="planning_topic_hz1" type="int" value="5" />
+          <param name="planning_topic_name2" type="string" value="/zzz/planning/collision_circle" />
+          <param name="planning_topic_hz2" type="int" value="5" />
+          <param name="planning_topic_name3" type="string" value="/zzz/planning/decision_MarkerArray" />
+          <param name="planning_topic_hz3" type="int" value="5" />
+          <param name="planning_topic_name4" type="string" value="/zzz/planning/decision_trajectory" />
+          <param name="planning_topic_hz4" type="int" value="5" />
+          <param name="planning_topic_name5" type="string" value="/zzz/planning/decision_trajectory_path" />
+          <param name="planning_topic_hz5" type="int" value="5" />
+          <param name="planning_topic_name6" type="string" value="/zzz/planning/predi_trajectory_path" />
+          <param name="planning_topic_hz6" type="int" value="5" />
+          <param name="planning_topic_name7" type="string" value="/zzz/planning/temp_planning_received_ref_path" />
+          <param name="planning_topic_hz7" type="int" value="5" />    
+      </node>
+</launch>

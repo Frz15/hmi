@@ -1,0 +1,12 @@
+Header header
+
+uint8 SCU_IPC_PSeatBeltWarning
+uint8 SCU_IPC_DriverSeatBeltWarning
+uint8 SCU_IPC_1ndLPSeatBeltWar
+uint8 SCU_IPC_1ndMPSeatBeltWar
+uint8 SCU_IPC_1ndRPSeatBeltWar
+uint8 SCU_IPC_TotalOdometerVD
+float32 SCU_IPC_TotalOdometer
+uint8 SCU_IPC_ACSt
+uint8 SCU_IPC_ErrSt
+uint8 SCU_IPC_OverrideRes

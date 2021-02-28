@@ -1,0 +1,5 @@
+<launch>
+
+	<node name="hmi_qt_rviz" pkg="hmi_qt_rviz" type="novauto_monitor" required="true" output="screen"/> 
+
+</launch>

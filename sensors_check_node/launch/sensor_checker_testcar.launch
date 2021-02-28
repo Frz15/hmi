@@ -1,0 +1,41 @@
+<!-- self_check -->
+<launch>
+      <node pkg="sensor_self_check" type="sensor_checker" respawn="true"
+            name="sensor_checker" output="screen" ns="/self_check">
+          <param name="check_topic_number" type="int" value="16" />
+         <!-- canbus -->
+          <param name="canbus_topic_number" type="int" value="6" />
+          <param name="canbus_topic_name1" type="string" value="/CAN/VCU_fbk" />
+          <param name="canbus_topic_name2" type="string" value="/CAN/enable_fbk" />
+          <param name="canbus_topic_name3" type="string" value="/CAN/err_fbk" />
+          <param name="canbus_topic_name4" type="string" value="/CAN/four_wheel_spd_fbk" />
+          <param name="canbus_topic_name5" type="string" value="/CAN/motor_spd_fbk" />          
+          <param name="canbus_topic_name6" type="string" value="/CAN/BMS_fbk" />
+         <!-- gnss -->
+          <param name="gnss_topic_number" type="int" value="6" />
+          <param name="gnss_topic_name1" type="string" value="/gnss/bestposb" />
+          <param name="gnss_topic_name2" type="string" value="/gnss/bestvelb" />
+          <param name="gnss_topic_name3" type="string" value="/gnss/headingb" />
+          <param name="gnss_topic_name4" type="string" value="/gnss/inspva" />
+          <param name="gnss_topic_name5" type="string" value="/gnss/range" />
+          <param name="gnss_topic_name6" type="string" value="/gnss/rawimu" />
+         <!-- lidar -->
+          <param name="lidar_topic_number" type="int" value="2" />
+          <param name="lidar_topic_name1" type="string" value="/middle/rslidar_points" />
+          <param name="lidar_topic_name2" type="string" value="/left/rslidar_points" />
+
+          <param name="topic_name17" type="string" value="/gnss/gloephemeris" />
+          <param name="topic_name18" type="string" value="/gnss/bdsephemeris" />
+          <param name="topic_name19" type="string" value="/gnss/gpsephemeris" />
+          <param name="topic_name20" type="string" value="/left/rslidar_points" />
+          <param name="topic_name21" type="string" value="/gnss/gloephemeris" />
+          <param name="topic_name22" type="string" value="/gnss/bdsephemeris" />
+          <param name="topic_name23" type="string" value="/gnss/gpsephemeris" />
+          <param name="topic_name24" type="string" value="/left/rslidar_points" />
+          <param name="topic_name25" type="string" value="/gnss/gloephemeris" />
+          <param name="topic_name26" type="string" value="/gnss/bdsephemeris" />
+          <param name="topic_name27" type="string" value="/gnss/gpsephemeris" />
+
+
+      </node>
+</launch>

@@ -1,0 +1,13 @@
+Header header
+
+uint8 lidar_status_ok
+uint8 canbus_status_ok
+uint8 gnss_status_ok
+uint8 camera_status_ok
+uint8 arsmmw_status_ok
+uint8 srrmmw_status_ok
+uint8 usradar_status_ok
+uint8 localization_status_ok
+uint8 perception_status_ok
+uint8 control_status_ok
+uint8 planning_status_ok
