@@ -1,0 +1,32 @@
+<package format="2">
+  <name>sensor_self_check</name>
+  <version>0.1.0</version>
+  <description>
+    The main decision part
+  </description>
+  <license>BSD</license>
+  <maintainer email="yafei.sun@novauto.com.cn">Yafei Sun</maintainer>
+  <author email="yafei.sun@novauto.com.cn">Yafei Sun</author>
+
+  <url type="website">https://github.com/cmpute/zzz</url>
+  <url type="repository">https://github.com/cmpute/zzz</url>
+  <url type="bugtracker">https://github.com/cmpute/zzz/issues</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_export_depend>roscpp</build_export_depend>
+  <build_export_depend>std_msgs</build_export_depend>
+  <build_export_depend>sensor_status_msgs</build_export_depend>
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>canbus_msgs</exec_depend>
+  <exec_depend>continental_radar_msgs</exec_depend>
+  <exec_depend>novatel_gnss_msgs</exec_depend>
+  <exec_depend>radar_msgs</exec_depend>
+  <exec_depend>srr_radar_msgs</exec_depend>
+  <exec_depend>us_radar_msgs</exec_depend>
+  <exec_depend>xpmotors_can_msgs</exec_depend>
+  <exec_depend>sensor_status_msgs</exec_depend>
+  <export></export>
+</package>

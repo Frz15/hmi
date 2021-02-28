@@ -1,0 +1,310 @@
+#!/usr/bin/env python
+
+'''
+This project is to check sensors working status after power on. 
+If problems happen, check hardware, cable connection, drivers and so on
+Sensors:     canbus of vehicle 
+             camera
+             lidar
+             gnss/imu
+             continental radars(ARS, SRR)
+             ultra sound radars            
+           
+ 1. check if all topics are published
+ 2. check topic hz
+ 3. msg content #could be added later  
+'''
+
+from std_msgs.msg import Int32, String
+import rospy
+import rostopic 
+import warnings
+import os
+from sensor_self_check.params import parse_private_args
+
+
+from sensor_status_msgs.msg import SensorStatus
+#canbus msg
+from canbus_msgs.msg import GearShiftCmd
+from canbus_msgs.msg import SteeringControlCmd
+from canbus_msgs.msg import DriveControlCmd
+from canbus_msgs.msg import BrakeControlCmd
+from canbus_msgs.msg import ParkingCmd
+from canbus_msgs.msg import VCUFbk
+from canbus_msgs.msg import BMSFbk
+from canbus_msgs.msg import EnableFbk
+from canbus_msgs.msg import FourWheelSpdFbk
+from canbus_msgs.msg import MotorSpdFbk
+from canbus_msgs.msg import ErrFbk
+#huace gnss novatel_gnss_msgs
+from novatel_gnss_msgs.msg import LongHeader
+from novatel_gnss_msgs.msg import BdsEphemeris
+from novatel_gnss_msgs.msg import BestPosb
+from novatel_gnss_msgs.msg import BestVelb
+from novatel_gnss_msgs.msg import GloEphemeris
+'''from novatel_gnss_msgs.msg import GpChc'''
+from novatel_gnss_msgs.msg import GpsEphemeris
+from novatel_gnss_msgs.msg import Headingb
+from novatel_gnss_msgs.msg import InsPva
+from novatel_gnss_msgs.msg import RangeIn
+from novatel_gnss_msgs.msg import Range
+from novatel_gnss_msgs.msg import RawImu
+#rslidar msop packets and difop packets
+from rslidar_msgs.msg import rslidarPacket
+from rslidar_msgs.msg import rslidarScan
+#usradar 
+from us_radar_msgs.msg import DetectionsArray
+from us_radar_msgs.msg import Detections
+from us_radar_msgs.msg import DistancesArray
+from us_radar_msgs.msg import Distances
+#continental_radar mmw-ARS
+from continental_radar_msgs.msg import RadarMsg
+from continental_radar_msgs.msg import RadarObs
+#continental_radar mmw-SRR
+from srr_radar_msgs.msg import RadarMsg
+from srr_radar_msgs.msg import RadarObs
+
+#localization from gnss
+#perception
+# from autoware_msgs.msg import DetectedObjectArray
+#control    from canbus
+#planning
+from visualization_msgs.msg import MarkerArray
+from zzz_planning_msgs.msg import DecisionTrajectory
+
+
+TOPIC_HZ_THRESHOLD = 0.3
+MSG_NUM_TO_CHECK_RATE = 11
+SENSOR_STATUS_PUB_HZ = 10
+
+sensor_status_publisher = None
+sensor_status_topic='/sensor_status'
+
+class SensorChecker:
+ def __init__(self, sensor_name=" "):
+     self.sensor_name_ = sensor_name
+     self.sensor_status_ = SensorStatus()
+
+     self.reset_sensor_status_ok("lidar")
+     self.reset_sensor_status_ok("canbus")
+     self.reset_sensor_status_ok("gnss")
+     self.reset_sensor_status_ok("camera")
+     self.reset_sensor_status_ok("arsmmw")
+     self.reset_sensor_status_ok("srrmmw")
+     self.reset_sensor_status_ok("usradar")
+     self.reset_sensor_status_ok("localization")
+     self.reset_sensor_status_ok("perception")
+     self.reset_sensor_status_ok("control")
+     self.reset_sensor_status_ok("planning")
+     self.rate_ = rospy.Rate(SENSOR_STATUS_PUB_HZ)
+
+ def get_pubisled_topics(self):
+    topic_names = rospy.get_published_topics()
+    self.all_topic_names_published = []
+    for topic_name in topic_names:
+        self.all_topic_names_published.append(topic_name[0])
+    return self.all_topic_names_published
+
+ def get_topics_tocheck(self):
+    params1 = parse_private_args(
+       check_topic_number = "check_topic_number",
+       hz = 5,
+    )
+    self.check_topic_number = params1.check_topic_number
+    print("topic number to check is %d\n" % self.check_topic_number)
+
+    self.topics_tocheck = []
+    for x in range(self.check_topic_number):
+    # + str(x+1),
+        params2 = parse_private_args(
+            topic_name  = "topic_name" + str(x+1),
+            hz = 5,
+        )    
+        topic_tocheck = params2.topic_name
+        print("topic_name %d is %s\n" % (x+1,topic_tocheck))
+        self.topics_tocheck.append(topic_tocheck)
+    return self.topics_tocheck
+
+ def get_sensor_topics_tocheck(self, sensor_name=""):
+    params1 = parse_private_args(
+       sensor_topic_number = sensor_name + "_topic_number",
+       hz = 5,
+    )
+    #try
+    self.sensor_topic_number = params1.sensor_topic_number
+    print(sensor_name + " topic number to check is %d\n" % self.sensor_topic_number)
+
+    self.sensor_topics_tocheck = []
+    for x in range(self.sensor_topic_number):
+        params2 = parse_private_args(
+            topic_name  = sensor_name + "_topic_name" + str(x+1),
+            topic_hz = sensor_name + "_topic_hz" + str(x+1),
+            hz = 5,
+        )    
+        sensor_topic_tocheck = params2.topic_name
+        sensor_topichz_tocheck = params2.topic_hz
+        print(sensor_name + "_topic_name %d is %s, normal hz is %d\n" % (x+1,sensor_topic_tocheck, sensor_topichz_tocheck))
+        arr_temp = [sensor_topic_tocheck, sensor_topichz_tocheck]
+        self.sensor_topics_tocheck.append(arr_temp)
+    return self.sensor_topics_tocheck
+
+ def check_sensor_topics(self, sensor_name=""):        
+    sensor_status_ok = 1
+    sensor_topics_tocheck = self.get_sensor_topics_tocheck(sensor_name)
+    for sensor_topic_tocheck in sensor_topics_tocheck:
+        if(sensor_topic_tocheck[0] in self.all_topic_names_published):
+            # print("Topic: %s is listed.\n" % topic_tocheck)
+            try:
+                    msg_class, real_topic, _ = rostopic.get_topic_class(sensor_topic_tocheck[0])
+            except rostopic.ROSTopicIOException as e:
+                    raise e
+            if not real_topic:
+                    return error("Topic does not exist", 404)
+            # temp_hz = 10
+            print("Topic: %s hz is %d.\n" % (sensor_topic_tocheck[0],sensor_topic_tocheck[1]) )
+            rate_ok = self.check_rate(real_topic, msg_class, sensor_topic_tocheck[1])
+            if not rate_ok:
+                print('\033[31m' + sensor_name + ' topic: %s hz is out of range.\033[0m\n' % sensor_topic_tocheck[0])
+                sensor_status_ok = 0
+            continue
+        else:
+            print('\033[31m' + sensor_name + ' topic: %s is NOT listed.\033[0m\n' % sensor_topic_tocheck[0])
+            sensor_status_ok = 0
+            self.reset_sensor_status_ok(sensor_name)
+
+    if(sensor_status_ok == 1):
+        self.set_sensor_status_ok(sensor_name)
+        print("All " + sensor_name + " topics are working.\n\n")
+        return True
+    return False
+
+ def check_canbus_topics(self):        
+    # canbus_topics_tocheck = self.get_canbus_topics_tocheck()
+    canbus_topics_tocheck = self.get_sensor_topics_tocheck("canbus")
+
+    for canbus_topic_tocheck in canbus_topics_tocheck:
+        if(canbus_topic_tocheck in self.all_topic_names_published):
+            # print("Topic: %s is listed.\n" % topic_tocheck)
+            try:
+                    msg_class, real_topic, _ = rostopic.get_topic_class(canbus_topic_tocheck)
+            except rostopic.ROSTopicIOException as e:
+                    raise e
+            if not real_topic:
+                    return error("Topic does not exist", 404)
+            temp_hz = 10
+            self.check_rate(real_topic, msg_class, temp_hz)
+            continue
+
+        else:
+            print('\033[31mCanbus topic: %s is NOT listed.\033[0m\n' % canbus_topic_tocheck)
+            self.sensor_status_.canbus_status_ok = 0
+    if(self.sensor_status_.canbus_status_ok == 1):
+        print("All canbus topics are working.\n\n")
+        # rospy.signal_shutdown("closed!")
+        return False
+    return True
+
+
+ def get_rate(self, topic_name=" ", msg_class = any):    
+    msg_time = {}
+    for x in range(MSG_NUM_TO_CHECK_RATE):
+        msg =  rospy.wait_for_message(topic_name, msg_class,10)
+        if msg is None:
+            print('\033[31mTopic: %s message is NOT received.\033[0m\n' % topic_name)
+        msg_time[x] = rospy.get_time()      
+    time_dif = msg_time[MSG_NUM_TO_CHECK_RATE-1] - msg_time[0]
+    average_time = time_dif/(MSG_NUM_TO_CHECK_RATE-1)
+    # print('\033[31mTopic: %s average time is: %f.\033[0m\n' % (topic_name,average_time))
+    topic_rate = 1.0/average_time
+    return topic_rate
+
+ def check_rate(self, topic_name=" ",  msg_class = any, topic_hz = 1):
+    topic_hz_real = self.get_rate(topic_name, msg_class)
+    #print('Topic: %s rate is: %.2f.\n' % (topic_name,topic_hz_real))
+    if (topic_hz_real <= topic_hz*(1+TOPIC_HZ_THRESHOLD)) and (topic_hz_real >= topic_hz*(1-TOPIC_HZ_THRESHOLD)):
+        return True
+    print('\033[31m topic: %s hz is %d.\033[0m\n' % (topic_name, topic_hz_real))
+    return False
+
+
+ def reset_sensor_status_ok(self,sensor_name = ""):
+    if(sensor_name == "lidar"):
+        self.sensor_status_.lidar_status_ok = 0
+    elif(sensor_name == "canbus"):
+        self.sensor_status_.canbus_status_ok = 0
+    elif(sensor_name == "gnss"):
+        self.sensor_status_.gnss_status_ok = 0
+    elif(sensor_name == "camera"):
+        self.sensor_status_.camera_status_ok = 0
+    elif(sensor_name == "arsmmw"):
+        self.sensor_status_.arsmmw_status_ok = 0
+    elif(sensor_name == "srrmmw"):
+        self.sensor_status_.srrmmw_status_ok = 0
+    elif(sensor_name == "usradar"):
+        self.sensor_status_.usradar_status_ok = 0
+    elif(sensor_name == "localization"):
+        self.sensor_status_.localization_status_ok = 0
+    elif(sensor_name == "perception"):
+        self.sensor_status_.perception_status_ok = 0
+    elif(sensor_name == "control"):
+        self.sensor_status_.control_status_ok = 0
+    elif(sensor_name == "planning"):
+        self.sensor_status_.planning_status_ok = 0
+
+ def set_sensor_status_ok(self,sensor_name = ""):
+    if(sensor_name == "lidar"):
+        self.sensor_status_.lidar_status_ok = 1
+    elif(sensor_name == "canbus"):
+        self.sensor_status_.canbus_status_ok = 1
+    elif(sensor_name == "gnss"):
+        self.sensor_status_.gnss_status_ok = 1
+    elif(sensor_name == "camera"):
+        self.sensor_status_.camera_status_ok = 1
+    elif(sensor_name == "arsmmw"):
+        self.sensor_status_.arsmmw_status_ok = 1
+    elif(sensor_name == "srrmmw"):
+        self.sensor_status_.srrmmw_status_ok = 1
+    elif(sensor_name == "usradar"):
+        self.sensor_status_.usradar_status_ok = 1
+    elif(sensor_name == "localization"):
+        self.sensor_status_.localization_status_ok = 1
+    elif(sensor_name == "perception"):
+        self.sensor_status_.perception_status_ok = 1
+    elif(sensor_name == "control"):
+        self.sensor_status_.control_status_ok = 1
+    elif(sensor_name == "planning"):
+        self.sensor_status_.planning_status_ok = 1
+
+ def loop(self):
+    global sensor_status_publisher
+    while not rospy.is_shutdown():    
+        topic_names = self.get_pubisled_topics()
+        # self.check_canbus_topics()    
+        self.check_sensor_topics("lidar")
+        self.check_sensor_topics("canbus")
+        self.check_sensor_topics("gnss")
+        self.check_sensor_topics("camera")
+        # self.check_sensor_topics("arsmmw")
+        # self.check_sensor_topics("srrmmw")
+        # self.check_sensor_topics("usradar")
+        self.check_sensor_topics("localization")
+        self.check_sensor_topics("perception")
+        self.check_sensor_topics("control")
+        self.check_sensor_topics("planning")
+
+        # self. sensor_status_.header.timestamp = rospy.time() #time now
+        sensor_status_publisher.publish(self.sensor_status_)
+        self.rate_.sleep()
+
+def main():
+    node_ = rospy.init_node('sensor_self_checker')
+    checker = SensorChecker(" ")
+
+    global sensor_status_publisher, sensor_status_topic
+    sensor_status_publisher = rospy.Publisher(sensor_status_topic, SensorStatus, queue_size=10)
+    
+    checker.loop()
+
+
+if __name__ == '__main__':
+    main()
